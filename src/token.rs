@@ -1,12 +1,14 @@
 pub struct Token {
-    pub token_type: TokenType,
+    //TODO: change token type 
+    pub token_type: String,
     pub lexeme: String,
-    pub literal: Option<Literal>,
+    //TODO: change literal type
+    pub literal: String,
     pub line: usize,
 }
 
 impl Token {
-    pub fn new(token_type: TokenType, lexeme: String, literal: Option<Literal>, line: usize) -> Token {
+    pub fn new(token_type: String, lexeme: String, literal: String, line: usize) -> Token {
         Token {
             token_type,
             lexeme,
