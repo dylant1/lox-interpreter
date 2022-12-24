@@ -2,7 +2,13 @@ use std::process;
 use std::env;
 use std::fs;
 use std::str;
+use std::io::prelude::*;
+use std::io::BufReader;
+//use the scanner module
+use scanner::Scanner;
 
+//use the scanner module
+mod scanner;
 mod err;
 mod token_type;
 mod token;
@@ -18,9 +24,7 @@ fn main() {
         run_file(&args[1]);
     }
     else {
-        //run_prompt();
-        println!("{}", String::from("interactive mode"));
-        //err::error(0, "Test error");
+        run_prompt();
     }
 }
 
@@ -34,8 +38,22 @@ fn run_file(path: &str)  {
 }
 
 fn run(bytes: &str) {
-    for byte in bytes.chars() {
-        println!("{}", byte)
+    let mut scanner = Scanner::new(String::from(bytes));
+    let tokens = scanner.scan_tokens();
+    for token in tokens {
+        //println!("{}", token.to_string());
+        println!("{:?}", token);
     }
-    // use err::function() to run a function from err.rs
+}
+
+fn run_prompt() {
+    let stdin = std::io::stdin();
+    let mut reader = BufReader::new(stdin);
+    loop {
+        print!("> ");
+        std::io::stdout().flush().unwrap();
+        let mut line = String::new();
+        reader.read_line(&mut line).unwrap();
+        run(&line);
+    }
 }
