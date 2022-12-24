@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 mod err;
 
 struct Scanner {
@@ -6,10 +7,14 @@ struct Scanner {
     start: usize,
     current: usize,
     line: usize,
+    keywords: HashMap<String, TokenType>,
 }
 
 impl Scanner {
     //TODO: May need to change the start, current, and line props
+
+    
+
     fn new(source: String) -> Scanner {
         Scanner {
             source,
@@ -17,8 +22,12 @@ impl Scanner {
             start: 0,
             current: 0,
             line: 1,
+            keywords: HashMap::new(),
         }
     }
+
+    //inserts keywords into the hashmap
+
 
     fn scan_tokens(&mut self) -> Vec<Token> {
         while !self.is_at_end() {
@@ -98,18 +107,32 @@ impl Scanner {
             },
             ' ' | '\r' | '\t' => (),
             '\n' => self.line += 1,
-            //TODO: Add string support
+            '"' => self.string(),
             _ => {
-                err::error(self.line, "Unexpected character.");
-                break;
+                if is_digit(c) {
+                    self.number();
+                } else if is_alpha(c) {
+                    self.identifier();
+                } else {
+                    err::error(self.line, "Unexpected character.");
+                }
             }
         }
     }
+
     fn peek(&self) -> char {
         if self.is_at_end() {
             '\0'
         } else {
             self.source[self.current]
+        }
+    }
+
+    fn peek_next(&self) -> char {
+        if self.current + 1 > self.source.len() {
+            '\0'
+        } else {
+            self.source[self.current + 1]
         }
     }
 
@@ -134,4 +157,54 @@ impl Scanner {
         let text = self.source[self.start..self.current].to_string();
         self.tokens.push(Token::new(token_type, text, literal, self.line));
     }
+
+    fn string() {
+        while self.peek() != '"' && !self.is_at_end() {
+            if self.peek() == '\n' {
+                self.line += 1;
+            }
+            self.advance();
+        }
+
+        if self.is_at_end() {
+            err::error(self.line, "Unterminated string.");
+            return;
+        }
+
+        self.advance();
+
+        let value = self.source[self.start + 1..self.current - 1].to_string();
+        self.add_token(TokenType::String, Some(Literal::String(value)));
+    }
+
+    fn is_digit(c: char) -> bool {
+        //TODO: Check if this is correct
+        c >= '0' && c <= '9'
+    }
+
+    fn number() {
+        while self.is_digit(self.peek()) {
+            self.advance();
+        }
+
+        if self.peek() == "." && self.is_digit(self.peek_next()) {
+            self.advance();
+
+            while self.is_digit(self.peek()) {
+                self.advance();
+            }
+        }
+        //TODO: clean this up
+        self.add_token(TokenType::Number, Some(Literal::Number(self.source[self.start..self.current].parse::<f64>().unwrap())));
+    }
+
+    fn is_alpha(c: char) -> bool {
+        //TODO: Check if this is correct
+        c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c == '_'
+    }
+
+    fn is_alpha_numeric(c: char) -> bool {
+        self.is_alpha(c) || self.is_digit(c)
+    }
+
 }
