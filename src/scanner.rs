@@ -1,20 +1,41 @@
 use std::collections::HashMap;
 mod err;
 
+//create a keyword map
+fn keyword_map() -> HashMap<&'static str, &'static str> {
+    //insert tokentypes into hashmap
+
+    let mut map = HashMap::new();
+    map.insert("and", TokenType::AND);
+    map.insert("class", TokenType::CLASS);
+    map.insert("else", TokenType::ELSE);
+    map.insert("false", TokenType::FALSE);
+    map.insert("for", TokenType::FOR);
+    map.insert("fun", TokenType::FUN);
+    map.insert("if", TokenType::IF);
+    map.insert("nil", TokenType::NIL);
+    map.insert("or", TokenType::OR);
+    map.insert("print", TokenType::PRINT);
+    map.insert("return", TokenType::RETURN);
+    map.insert("super", TokenType::SUPER);
+    map.insert("this", TokenType::THIS);
+    map.insert("true", TokenType::TRUE);
+    map.insert("var", TokenType::VAR);
+    map.insert("while", TokenType::WHILE);
+    map
+}
+
 struct Scanner {
     source: String,
     tokens: Vec<Token>,
     start: usize,
     current: usize,
     line: usize,
-    keywords: HashMap<String, TokenType>,
+    keywords: HashMap<&'static str, &'static str>,
 }
 
 impl Scanner {
     //TODO: May need to change the start, current, and line props
-
-    
-
     fn new(source: String) -> Scanner {
         Scanner {
             source,
@@ -22,10 +43,9 @@ impl Scanner {
             start: 0,
             current: 0,
             line: 1,
-            keywords: HashMap::new(),
+            keywords: keyword_map(),
         }
     }
-
     //inserts keywords into the hashmap
 
 
@@ -135,6 +155,17 @@ impl Scanner {
             self.source[self.current + 1]
         }
     }
+
+    fn identifier(&mut self) {
+        while is_alpha_numeric(self.peek()) {
+            self.advance();
+        }
+
+        let text = &self.source[self.start..self.current];
+        let token_type = self.keywords.get(text).unwrap_or(&TokenType::IDENTIFIER);
+        self.add_token(token_type, None);
+    }
+
 
     fn match_char(&mut self, expected: char) -> bool {
         if self.is_at_end() {
